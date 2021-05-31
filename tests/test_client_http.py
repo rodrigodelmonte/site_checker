@@ -1,7 +1,8 @@
 from typing import Dict
 
 import pytest
-from checker import HTTPClient
+
+from site_checker.clients.http import HTTPClient
 
 
 @pytest.mark.parametrize(
