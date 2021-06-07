@@ -10,6 +10,15 @@ logger = logging.getLogger(__name__)
 
 
 def get_response(url: str) -> Response:
+    """Receives an url string and returns a request.Response object.
+    It uses timeout and retry logic to avoid errors due to network and servers instability
+
+    Args:
+        url (str): String example: http://www.python.org
+
+    Returns:
+        Response: Response object
+    """
 
     # https://findwork.dev/blog/advanced-usage-python-requests-timeouts-retries-hooks/#retry-on-failure
     session = requests.Session()
