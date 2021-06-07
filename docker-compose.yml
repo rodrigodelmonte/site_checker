@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  producer:
+    build: .
+    command: ./run_producer.sh
+    volumes:
+      - ./example/:/src/app/config/
+    env_file:
+      - ./example/.producer.env
