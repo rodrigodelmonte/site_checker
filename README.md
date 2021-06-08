@@ -13,3 +13,6 @@ network, produces metrics about this and passes these events through `Kafka` ins
 - **consumer:** consume metrics from `Kafka` topics and save metrics into an `PostgreSQL` database.
 
 ![architecture diagram](docs/site_checker_architecture.png)
+
+## Contribute
+For more detail, please check [CONTRIBUTING.md](CONTRIBUTING.md) guide.
