@@ -6,7 +6,7 @@ from site_checker.run import cli
 def test_run_producer_with_config_ini():
     runner = CliRunner()
 
-    args = "producer --config-path example/config.ini --dry-run".split()
+    args = "producer --config-path example/example.config.ini --dry-run".split()
     result = runner.invoke(cli, args)
 
     assert result.exit_code == 0

@@ -9,5 +9,5 @@ def config_path():
 
 
 @pytest.fixture
-def kafka_config_fixture() -> KafkaConfig:
-    return kafka_config("./example/config.ini")
+def kafka_config_fixture(config_path) -> KafkaConfig:
+    return kafka_config(config_path)
