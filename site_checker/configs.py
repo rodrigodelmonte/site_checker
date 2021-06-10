@@ -79,3 +79,66 @@ def kafka_config(config_path: str) -> KafkaConfig:
         ssl_certfile=config["kafka"].get("ssl_certfile", "./service.cert"),
         ssl_keyfile=config["kafka"].get("ssl_keyfile", "./service.key"),
     )
+
+
+def kafka_topics(config_path: str) -> List:
+    """Read configuration from config.ini file and returns a
+    list of kafka topics to be consumed.
+
+    Args:
+        config_path (str): The path for the config.ini file.
+
+    Returns:
+        List: of Kafka topics
+    """
+
+    config = configparser.ConfigParser()
+    config.read(config_path)
+
+    topics = []
+    for c in config.sections():
+        if c.startswith("website_"):
+            topic = c.replace("website_", "")
+            topics.append(topic)
+
+    return topics
+
+
+@dataclass
+class PostgresConfig:
+    user: str
+    password: str
+    host: str
+    port: str
+    database: str
+    sslmode: str
+    sslrootcert: str
+    min_connection: int
+    max_connection: int
+
+
+def postgres_config(config_path: str) -> PostgresConfig:
+    """Read configuration from config.ini file and returns a
+    PostgresConfig object to be used by the postgres client.
+
+    Args:
+        config_path (str): The path for the config.ini file.
+
+    Returns:
+        PostgresConfig: object with postgres configurations
+    """
+
+    config = configparser.ConfigParser()
+    config.read(config_path)
+
+    return PostgresConfig(
+        user=config["postgres"].get("user", ""),
+        password=config["postgres"].get("password", ""),
+        host=config["postgres"].get("host", ""),
+        port=config["postgres"].get("port", "5432"),
+        database=config["postgres"].get("database", "postgres"),
+        sslmode=config["postgres"].get("sslmode", ""),
+        sslrootcert=config["postgres"].get("sslrootcert", ""),
+        min_connection=int(config["postgres"].get("min_connection", "1")),
+        max_connection=int(config["postgres"].get("max_connection", "10")),
+    )
