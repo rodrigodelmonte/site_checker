@@ -6,6 +6,8 @@ import time
 
 import click
 import configs
+from clients.postgres_client import PostgresClient
+from consumer import Consumer
 from producer import Producer
 
 
@@ -33,8 +35,106 @@ def cli():
 
 
 @click.command()
-def consumer():
-    pass
+@click.option("--config-path", help="Path to configuration file `config.ini`")
+@click.option(
+    "--kafka-bootstrap-servers", help="Kafka bootstrap server URI, e.g: <hott>:<port>"
+)
+@click.option(
+    "--kafka-security-protocol", help="Kafka Security Protocal, e.g: SSL", default="SSL"
+)
+@click.option("--kafka-ssl-cafile", help="Kafka path to ssl CA file, e.g: ./ca.pem")
+@click.option(
+    "--kafka-ssl-certfile", help="Kafka path to ssl cert file, e.g: ./service.cert"
+)
+@click.option(
+    "--kafka-ssl-keyfile", help="Kafka path to ssl key file, e.g: ./service.key"
+)
+@click.option("--kafka-topic", help="Kafka topic to consume")
+@click.option("--user", help="Postgres database user")
+@click.option("--password", help="Postgres database password")
+@click.option("--host", help="Postgres database hostname")
+@click.option("--port", help="Postgres database port")
+@click.option("--database", help="Postgres database name")
+@click.option("--sslmode", help="Postgres database SSL mode", default="verify-ca")
+@click.option("--sslrootcert", help="Postgres database SSL root cert path")
+@click.option(
+    "--dry-run", help="DRY-RUN mode, command will not check websites", is_flag=True
+)
+def consumer(
+    config_path,
+    kafka_bootstrap_servers,
+    kafka_security_protocol,
+    kafka_ssl_cafile,
+    kafka_ssl_certfile,
+    kafka_ssl_keyfile,
+    kafka_topic,
+    user,
+    password,
+    host,
+    port,
+    database,
+    sslmode,
+    sslrootcert,
+    dry_run,
+):
+    """Consume kafka topic and writes records in a Postgres database table"""
+
+    if config_path:
+        logger.info("Starting site_checker Consumer.")
+        logger.info(f"Reading configuration file {config_path}.")
+
+        kafka_config = configs.kafka_config(config_path)
+        kafka_topics = configs.kafka_topics(config_path)
+
+        postgres_config = configs.postgres_config(config_path)
+
+        if dry_run:
+            sys.exit(0)
+
+        postgres_client = PostgresClient()
+        postgres_connection_pool = postgres_client.create_connection_pool(
+            postgres_config
+        )
+
+        consumer = Consumer(kafka_config, kafka_topics, postgres_connection_pool)
+        consumer.subscribe_topics()
+
+    else:
+        logger.info("Starting site_checker Consumer.")
+
+        kafka_config = configs.KafkaConfig(
+            bootstrap_servers=kafka_bootstrap_servers,
+            security_protocol=kafka_security_protocol,
+            ssl_cafile=kafka_ssl_cafile,
+            ssl_certfile=kafka_ssl_certfile,
+            ssl_keyfile=kafka_ssl_keyfile,
+        )
+
+        postgres_config = configs.PostgresConfig(
+            user=user,
+            password=password,
+            host=host,
+            port=port,
+            database=database,
+            sslmode=sslmode,
+            sslrootcert=sslrootcert,
+            min_connection=1,
+            max_connection=2,
+        )
+
+        if dry_run:
+            sys.exit(0)
+
+        kafka_topics = []
+        kafka_topics.append(kafka_topic)
+
+        postgres_client = PostgresClient()
+        postgres_connection_pool = postgres_client.create_connection_pool(
+            postgres_config
+        )
+
+        consumer = Consumer(kafka_config, kafka_topics, postgres_connection_pool)
+        consumer.subscribe_topics()
 
 
 @click.command()
@@ -98,7 +198,7 @@ def producer(
             time.sleep(configs.POOLING_INTERVAL_IN_SECONDS)
     else:
         logger.info("Starting site_checker producer")
-        logger.info(f"Websites to check {name.upper()} at url {url}")
+        logger.info(f"Website to check {name.upper()} at url {url}")
         logger.info(f"Pooling interval {pooling_interval} seconds.")
 
         kafka_config = configs.KafkaConfig(
