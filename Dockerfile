@@ -23,17 +23,6 @@ WORKDIR $HOME
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-ENV ENVIRONMENT prod
-ENV TESTING 0
-ENV NAME ""
-ENV URL ""
-ENV REGEX ""
-ENV KAFKA_BOOTSTRAP_SERVERS ""
-ENV KAFKA_SECURITY_PROTOCOL ""
-ENV KAFKA_SSL_CAFILE ""
-ENV KAFKA_SSL_CERTFILE ""
-ENV KAFKA_SSL_KEYILE ""
-ENV POOLING_INTERVAL 60
 
 # install python dependencies
 COPY --from=builder /usr/src/app/wheels /wheels
@@ -43,7 +32,7 @@ RUN pip install --no-cache /wheels/*
 
 # add app
 COPY site_checker .
-COPY scripts/run_producer.sh .
+COPY scripts/*.sh .
 
 # chown all the files to the app user
 RUN chown -R app:app $HOME
