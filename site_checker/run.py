@@ -35,7 +35,10 @@ def cli():
 
 
 @click.command()
-@click.option("--config-path", help="Path to configuration file `config.ini`")
+@click.option(
+    "--config-path",
+    help="Path to configuration file `config.ini`. When used the others parans are not required",
+)
 @click.option(
     "--kafka-bootstrap-servers", help="Kafka bootstrap server URI, e.g: <hott>:<port>"
 )
@@ -138,10 +141,13 @@ def consumer(
 
 
 @click.command()
+@click.option(
+    "--config-path",
+    help="Path to configuration file `config.ini`. When used the others parans are not required",
+)
 @click.option("--name", help="Website name, e.g: python, cncf, apache")
 @click.option("--url", help="Website URL to check, e.g: https://python.org/")
 @click.option("--regex", help="Regex string to check, i.e: about")
-@click.option("--config-path", help="Path to configuration file `config.ini`")
 @click.option(
     "--kafka-bootstrap-servers", help="Bootstrap server URI, e.g: <hott>:<port>"
 )
