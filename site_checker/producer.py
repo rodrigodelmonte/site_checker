@@ -2,23 +2,13 @@ import datetime
 import json
 import logging
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 
 from clients import http_client
 from clients.kafka_client import KafkaClient
 from configs import KafkaConfig, WebsiteConfig
-from kafka.errors import KafkaError, KafkaTimeoutError
+from models import WebsiteMetrics
 from requests.models import Response
-
-
-@dataclass
-class WebsiteMetrics:
-    url: str
-    regex: str
-    has_regex: bool
-    status_code: int = 0
-    response_time: int = 0
-    ocurred_at: str = ""
 
 
 class Producer(KafkaClient):
@@ -39,9 +29,11 @@ class Producer(KafkaClient):
 
     def _get_metrics(self, website: WebsiteConfig) -> str:
 
-        self.logger.info(f"Getting metrics from url {website.url}")
+        self.logger.info(f"Getting metrics from website {website.name}")
 
-        metrics = WebsiteMetrics(url=website.url, regex=website.regex, has_regex=False)
+        metrics = WebsiteMetrics(
+            name=website.name, url=website.url, regex=website.regex, has_regex=False
+        )
         response = http_client.get_response(website.url)
         metrics.status_code = response.status_code
         metrics.response_time = self._get_response_time(response)
@@ -58,17 +50,10 @@ class Producer(KafkaClient):
 
     def _publish_metrics(self, website: WebsiteConfig, metrics: str) -> None:
 
-        self.logger.info(f"Publishing metrics from url {website.url}")
+        self.logger.info(f"Publishing metrics from website {website.name}")
 
-        try:
-            self.producer().send(website.name, value=metrics)
-            self.producer().flush()
-        # Kafka handling errors example:
-        # https://www.programcreek.com/python/example/92970/kafka.errors.KafkaError
-        except KafkaTimeoutError as e:
-            self.logger.exception(f"Kafka Producer Timeout Error:\n{e}")
-        except KafkaError as e:
-            self.logger.exception(f"Kafka Error occurred:\n{e}")
+        self.producer().send(website.name, value=metrics)
+        self.producer().flush()
 
     def check_website(self, website: WebsiteConfig) -> None:
 
