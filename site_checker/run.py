@@ -3,6 +3,8 @@ import logging
 import signal
 import sys
 import time
+from queue import Queue
+from threading import Thread, current_thread
 
 import click
 import configs
@@ -10,9 +12,23 @@ from clients.postgres_client import PostgresClient
 from consumer import Consumer
 from producer import Producer
 
+q = Queue()  # type: ignore
+
+
+def worker(n, producer):
+    while True:
+        website = q.get()
+
+        logger.info(f"Running on thread: {current_thread().name}")
+        producer.check_website(website)
+        time.sleep(website.pooling_interval)
+
+        q.task_done()
+
 
 def exit_gracefully(signalNumber, frame):
     logger.info(f"Received Signal: {signalNumber}, Stopping worker.")
+    q.join()
     sys.exit(0)
 
 
@@ -193,19 +209,21 @@ def producer(
         logger.info(
             f"List of websites to check: {[website.name for website in websites]}"
         )
-        logger.info(
-            f"Default pooling interval {configs.POOLING_INTERVAL_IN_SECONDS} seconds."
-        )
 
         producer = Producer(configs.kafka_config(config_path))
 
         if dry_run:
             sys.exit(0)
 
+        # Create threads based on the number of websites.
+        for website in websites:
+            thread = Thread(target=worker, args=(q, producer))
+            thread.daemon = True
+            thread.start()
+
         while True:
             for website in websites:
-                producer.check_website(website)
-            time.sleep(configs.POOLING_INTERVAL_IN_SECONDS)
+                q.put(website)
     else:
         logger.info("Starting site_checker producer")
         logger.info(f"Website to check {name.upper()} at url {url}")

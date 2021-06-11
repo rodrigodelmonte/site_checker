@@ -2,14 +2,13 @@ import configparser
 from dataclasses import dataclass
 from typing import List
 
-POOLING_INTERVAL_IN_SECONDS = 20
-
 
 @dataclass
 class WebsiteConfig:
     name: str
     url: str = ""
     regex: str = ""
+    pooling_interval: int = 10
 
 
 def websites_configs(config_path: str) -> List[WebsiteConfig]:
@@ -43,6 +42,7 @@ def websites_configs(config_path: str) -> List[WebsiteConfig]:
             name=website.replace("website_", ""),
             url=config[website].get("url", ""),
             regex=config[website].get("regex", ""),
+            pooling_interval=int(config[website].get("pooling_interval", "")),
         )
         websites_configs.append(web)
 
