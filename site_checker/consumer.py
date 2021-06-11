@@ -30,7 +30,7 @@ class Consumer(KafkaClient):
         self.logger.info(f"Metrics saved to database table: {website_metrics.name}")
         self.postgres_connection_pool.putconn(connection)
 
-    def _proccess_record(self, record: ConsumerRecord) -> WebsiteMetrics:
+    def _proccess_metrics(self, record: ConsumerRecord) -> WebsiteMetrics:
 
         metrics = dict(json.loads((record.value)))
         website_metrics = WebsiteMetrics(**metrics)
@@ -44,5 +44,5 @@ class Consumer(KafkaClient):
         consumer = self.consumer()
         consumer.subscribe(topics=self.kafka_topics)
         for record in consumer:
-            website_metrics = self._proccess_record(record)
+            website_metrics = self._proccess_metrics(record)
             self._save_metrics(website_metrics)

@@ -71,13 +71,14 @@ def kafka_config(config_path: str) -> KafkaConfig:
 
     config = configparser.ConfigParser()
     config.read(config_path)
+    kfk_config = config["kafka"]
 
     return KafkaConfig(
-        bootstrap_servers=config["kafka"].get("bootstrap_servers", ""),
-        security_protocol=config["kafka"].get("security_protocol", "SSL"),
-        ssl_cafile=config["kafka"].get("ssl_cafile", "./ca.pem"),
-        ssl_certfile=config["kafka"].get("ssl_certfile", "./service.cert"),
-        ssl_keyfile=config["kafka"].get("ssl_keyfile", "./service.key"),
+        bootstrap_servers=kfk_config.get("bootstrap_servers", ""),
+        security_protocol=kfk_config.get("security_protocol", "SSL"),
+        ssl_cafile=kfk_config.get("ssl_cafile", "./ca.pem"),
+        ssl_certfile=kfk_config.get("ssl_certfile", "./service.cert"),
+        ssl_keyfile=kfk_config.get("ssl_keyfile", "./service.key"),
     )
 
 
@@ -130,15 +131,16 @@ def postgres_config(config_path: str) -> PostgresConfig:
 
     config = configparser.ConfigParser()
     config.read(config_path)
+    pg_config = config["postgres"]
 
     return PostgresConfig(
-        user=config["postgres"].get("user", ""),
-        password=config["postgres"].get("password", ""),
-        host=config["postgres"].get("host", ""),
-        port=config["postgres"].get("port", "5432"),
-        database=config["postgres"].get("database", "postgres"),
-        sslmode=config["postgres"].get("sslmode", ""),
-        sslrootcert=config["postgres"].get("sslrootcert", ""),
-        min_connection=int(config["postgres"].get("min_connection", "1")),
-        max_connection=int(config["postgres"].get("max_connection", "10")),
+        user=pg_config.get("user", ""),
+        password=pg_config.get("password", ""),
+        host=pg_config.get("host", ""),
+        port=pg_config.get("port", "5432"),
+        database=pg_config.get("database", "postgres"),
+        sslmode=pg_config.get("sslmode", ""),
+        sslrootcert=pg_config.get("sslrootcert", ""),
+        min_connection=int(pg_config.get("min_connection", "1")),
+        max_connection=int(pg_config.get("max_connection", "10")),
     )
