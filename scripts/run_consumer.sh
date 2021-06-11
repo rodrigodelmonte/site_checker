@@ -6,10 +6,10 @@
     --kafka-ssl-certfile ${KAFKA_SSL_CERTFILE} \
     --kafka-ssl-keyfile ${KAFKA_SSL_KEYFILE} \
     --kafka-topic ${KAFKA_TOPIC} \
-    --user ${USER} \
-    --password ${PASSWORD} \
-    --host ${HOST} \
-    --port ${PORT} \
-    --database ${DATABASE} \
-    --sslmode ${SSLMODE} \
-    --sslrootcert ${SSLROOTCERT}
+    --postgres-user ${POSTGRES_USER} \
+    --postgres-password ${POSTGRES_PASSWORD} \
+    --postgres-host ${POSTGRES_HOST} \
+    --postgres-port ${POSTGRES_PORT} \
+    --postgres-database ${POSTGRES_DATABASE} \
+    --postgres-sslmode ${POSTGRES_SSLMODE} \
+    --postgres-sslrootcert ${POSTGRES_SSLROOTCERT}

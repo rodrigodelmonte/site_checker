@@ -37,13 +37,13 @@ def cli():
 @click.command()
 @click.option(
     "--config-path",
-    help="Path to configuration file `config.ini`. When used the others parans are not required",
+    help="Path to configuration file `config.ini`. When used the others params are not required",
 )
 @click.option(
-    "--kafka-bootstrap-servers", help="Kafka bootstrap server URI, e.g: <hott>:<port>"
+    "--kafka-bootstrap-servers", help="Kafka bootstrap server URI, e.g: <host>:<port>"
 )
 @click.option(
-    "--kafka-security-protocol", help="Kafka Security Protocal, e.g: SSL", default="SSL"
+    "--kafka-security-protocol", help="Kafka Security Protocol, e.g: SSL", default="SSL"
 )
 @click.option("--kafka-ssl-cafile", help="Kafka path to ssl CA file, e.g: ./ca.pem")
 @click.option(
@@ -53,13 +53,15 @@ def cli():
     "--kafka-ssl-keyfile", help="Kafka path to ssl key file, e.g: ./service.key"
 )
 @click.option("--kafka-topic", help="Kafka topic to consume")
-@click.option("--user", help="Postgres database user")
-@click.option("--password", help="Postgres database password")
-@click.option("--host", help="Postgres database hostname")
-@click.option("--port", help="Postgres database port")
-@click.option("--database", help="Postgres database name")
-@click.option("--sslmode", help="Postgres database SSL mode", default="verify-ca")
-@click.option("--sslrootcert", help="Postgres database SSL root cert path")
+@click.option("--postgres-user", help="Postgres database user")
+@click.option("--postgres-password", help="Postgres database password")
+@click.option("--postgres-host", help="Postgres database hostname")
+@click.option("--postgres-port", help="Postgres database port")
+@click.option("--postgres-database", help="Postgres database name")
+@click.option(
+    "--postgres-sslmode", help="Postgres database SSL mode", default="verify-ca"
+)
+@click.option("--postgres-sslrootcert", help="Postgres database SSL root cert path")
 @click.option(
     "--dry-run", help="DRY-RUN mode, command will not check websites", is_flag=True
 )
@@ -71,13 +73,13 @@ def consumer(
     kafka_ssl_certfile,
     kafka_ssl_keyfile,
     kafka_topic,
-    user,
-    password,
-    host,
-    port,
-    database,
-    sslmode,
-    sslrootcert,
+    postgres_user,
+    postgres_password,
+    postgres_host,
+    postgres_port,
+    postgres_database,
+    postgres_sslmode,
+    postgres_sslrootcert,
     dry_run,
 ):
     """Consume kafka topic and writes records in a Postgres database table"""
@@ -114,13 +116,13 @@ def consumer(
         )
 
         postgres_config = configs.PostgresConfig(
-            user=user,
-            password=password,
-            host=host,
-            port=port,
-            database=database,
-            sslmode=sslmode,
-            sslrootcert=sslrootcert,
+            user=postgres_user,
+            password=postgres_password,
+            host=postgres_host,
+            port=postgres_port,
+            database=postgres_database,
+            sslmode=postgres_sslmode,
+            sslrootcert=postgres_sslrootcert,
             min_connection=1,
             max_connection=2,
         )
@@ -143,16 +145,18 @@ def consumer(
 @click.command()
 @click.option(
     "--config-path",
-    help="Path to configuration file `config.ini`. When used the others parans are not required",
+    help="Path to configuration file `config.ini`. When used the others params are not required",
 )
 @click.option("--name", help="Website name, e.g: python, cncf, apache")
 @click.option("--url", help="Website URL to check, e.g: https://python.org/")
-@click.option("--regex", help="Regex string to check, i.e: about")
 @click.option(
-    "--kafka-bootstrap-servers", help="Bootstrap server URI, e.g: <hott>:<port>"
+    "--regex", help="Verifies if the response contains the given regex pattern"
 )
 @click.option(
-    "--kafka-security-protocol", help="Security Protocal, e.g: SSL", default="SSL"
+    "--kafka-bootstrap-servers", help="Bootstrap server URI, e.g: <host>:<port>"
+)
+@click.option(
+    "--kafka-security-protocol", help="Security Protocol, e.g: SSL", default="SSL"
 )
 @click.option("--kafka-ssl-cafile", help="Path to ssl CA file, e.g: ./ca.pem")
 @click.option("--kafka-ssl-certfile", help="Path to ssl cert file, e.g: ./service.cert")
