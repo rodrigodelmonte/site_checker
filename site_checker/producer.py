@@ -4,7 +4,7 @@ import logging
 import re
 from dataclasses import asdict
 
-from clients import http_client
+from clients.http_client import get_response
 from clients.kafka_client import KafkaClient
 from configs import KafkaConfig, WebsiteConfig
 from models import WebsiteMetrics
@@ -27,26 +27,25 @@ class Producer(KafkaClient):
 
         return has_regex
 
-    def _get_metrics(self, website: WebsiteConfig) -> str:
+    def _get_metrics(self, website: WebsiteConfig) -> WebsiteMetrics:
 
         self.logger.info(f"Getting metrics from website {website.name}")
 
         metrics = WebsiteMetrics(
             name=website.name, url=website.url, regex=website.regex, has_regex=False
         )
-        response = http_client.get_response(website.url)
-        metrics.status_code = response.status_code
-        metrics.response_time = self._get_response_time(response)
-        metrics.ocurred_at = datetime.datetime.utcnow().isoformat()
+        response = get_response(website.url)
+        if response:
+            metrics.status_code = response.status_code
+            metrics.response_time = self._get_response_time(response)
+            metrics.ocurred_at = datetime.datetime.utcnow().isoformat()
 
-        if metrics.regex and metrics.status_code == 200:
-            metrics.has_regex = self._check_regex(website.regex, response.text)
+            if metrics.regex and metrics.status_code == 200:
+                metrics.has_regex = self._check_regex(website.regex, response.text)
 
-        website_metrics = json.dumps(asdict(metrics))
+            self.logger.debug(f"Metrics collected: {metrics}")
 
-        self.logger.debug(f"Metrics collected: {website_metrics}")
-
-        return website_metrics
+        return metrics
 
     def _publish_metrics(self, website: WebsiteConfig, metrics: str) -> None:
 
@@ -58,5 +57,6 @@ class Producer(KafkaClient):
     def check_website(self, website: WebsiteConfig) -> None:
 
         metrics = self._get_metrics(website)
-        if metrics:
-            self._publish_metrics(website, metrics)
+        if metrics.status_code:
+            website_metrics = json.dumps(asdict(metrics))
+            self._publish_metrics(website, website_metrics)

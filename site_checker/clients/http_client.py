@@ -1,6 +1,7 @@
 import logging
+from typing import Optional
 
-import requests
+from requests import Session
 from requests.adapters import HTTPAdapter
 from requests.exceptions import ConnectionError
 from requests.models import Response
@@ -9,7 +10,7 @@ from requests.packages.urllib3.util.retry import Retry
 logger = logging.getLogger(__name__)
 
 
-def get_response(url: str) -> Response:
+def get_response(url: str) -> Optional[Response]:
     """Receives an url string and returns a request.Response object.
     It uses timeout and retry logic to avoid errors due to network and servers instability
 
@@ -21,7 +22,11 @@ def get_response(url: str) -> Response:
     """
 
     # https://findwork.dev/blog/advanced-usage-python-requests-timeouts-retries-hooks/#retry-on-failure
-    session = requests.Session()
+    response = None
+    session = Session()
+    connect_timeout = 2
+    read_timeout = 5
+
     retry_strategy = Retry(
         total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]
     )
@@ -30,7 +35,7 @@ def get_response(url: str) -> Response:
     session.mount("http://", adapter)
 
     try:
-        response = session.get(url, timeout=(2, 5))
+        response = session.get(url, timeout=(connect_timeout, read_timeout))
     except ConnectionError as e:
         logger.exception(f"HTTP Connection Error occurred:\n{e}")
 
