@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from configs import PostgresConfig
 from models import WebsiteMetrics
@@ -37,9 +38,10 @@ class PostgresClient:
                 sslrootcert=postgres_config.sslrootcert,
             )
             if connection_pool:
-                self.logger.info("Connection pool created successfully")
+                self.logger.info("SQL Database connection pool created successfully")
         except (Exception, DatabaseError) as e:
             self.logger.exception(f"Error while connecting to PostgreSQL\n{e}")
+            sys.exit(1)
 
         return connection_pool
 
