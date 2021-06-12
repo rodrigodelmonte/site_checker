@@ -7,11 +7,11 @@ services:
     volumes:
       - ./example/:/src/app/config/
     env_file:
-      - ./example/.producer.env
+      - ./example/example.producer.env
   consumer:
     build: .
     command: ./run_consumer.sh
     volumes:
       - ./example/:/src/app/config/
     env_file:
-      - ./example/.consumer.env
+      - ./example/example.consumer.env
