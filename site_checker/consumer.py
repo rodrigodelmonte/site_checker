@@ -19,18 +19,35 @@ class Consumer(KafkaClient):
         self.postgres_client = PostgresClient()
         self.logger = logging.getLogger(__name__)
 
+        # Creates automatically the target postgres tables when the
+        # Consumer is instantiated
         for topic_name in kafka_topics:
             connection = postgres_connection_pool.getconn()
             self.postgres_client.create_table(connection, topic_name)
             postgres_connection_pool.putconn(connection)
 
     def _save_metrics(self, website_metrics: WebsiteMetrics) -> None:
+        """Save website metrics to the target database table
+
+        Args:
+            website_metrics (WebsiteMetrics): Consumed from Kafka cluster
+        """
+
         connection = self.postgres_connection_pool.getconn()
         self.postgres_client.insert(connection, website_metrics)
         self.logger.info(f"Metrics saved to database table: {website_metrics.name}")
         self.postgres_connection_pool.putconn(connection)
 
     def _proccess_metrics(self, record: ConsumerRecord) -> WebsiteMetrics:
+        """Tranform a JSON string consumed from the Kafka cluster into a websiteMetrics
+        object
+
+        Args:
+            record (ConsumerRecord): JSON string consumed from Kafka cluster
+
+        Returns:
+            WebsiteMetrics: object
+        """
 
         metrics = dict(json.loads((record.value)))
         website_metrics = WebsiteMetrics(**metrics)
