@@ -24,6 +24,8 @@ This section will guide you through the steps to reproduce locally the demo pres
 
 This tutorial expects you have already a `Kafka` and `Postgres` instance running. For more details please check, [How to set up managed Apache Kafka](https://www.youtube.com/watch?v=YH-S3Huwfms) and [How to deploy an open source database](https://www.youtube.com/watch?v=t95IQ0kpbFY).
 
+Last request before start 🙏, On the Aiven Kafka dashboard, please go to  **Overview tab** to the **Advanced configuration** section and enable the `kafka.auto_create_topics_enable` parameter which will allow you to produce messages to Kafka without needing to create a topic beforehand.
+
 1. Checkout this repository:
 
 ```sh
@@ -65,5 +67,34 @@ $ select * from site_checker.apache;
 ```sh
 $ make clean
 ```
+
+## Production deployment
+
+### Configuration approaches
+
+- `config.ini`, can check multiple websites, for more details please check the [example/example.
+- docker `.env` or `CLI parameters`, checks a single website, for more details please check the [example/example.producer.env](example/example.producer.env) file.
+### Scalability considerations
+
+- The `config.ini` configuration approach will create one `thread` per website. In case you want to run `site_checker` in a single host to check multiple websites the performance will be limited by the host resources, too many websites or threads can cause too many switch context operations leading to performance impacts.
+config.ini](example/example.config.ini) file.
+![site_checker_config_ini diagram](docs/site_checker_config_ini.png)
+
+- The `CLI parameters` configuration approach also used in the `Demo`, will create a single python `process`. In case you want to monitor more than one website using this approach, you can build a container using the [Dockerfile](Dockerfile) definition as an starting point, and launch it in your container orchestrator system, e.g: `Kubernetes`, `AWS ECS` or `Mesos`.
+![site_checker_cli_parameters diagram](docs/site_checker_cli_parameters.png)
+### Security considerations
+
+The `site_checker` `consumer` will create automatically one table per topic, for example, topic name `apache` creates the table name `apache` under the schema `site_checker` into the `Postgres` instance. The `Demo` and `Getting Started` are using admin credentials to keep the steps simpler. However, this approach is not suitable for production workloads.
+
+For production it is recommended to create an application user limiting the usage only to the `site_checker` schema.
+Example:
+
+```sql
+CREATE USER site_checker WITH PASSWORD '<STRONGPASSWORD>';
+GRANT USAGE ON SCHEMA site_checker TO site_checker;
+GRANT CREATE ON SCHEMA site_checker TO site_checker;
+GRANT INSERT ON ALL TABLES IN SCHEMA site_checker TO site_checker;
+```
+
 ## Contribute
 For more detail, please check [CONTRIBUTING.md](CONTRIBUTING.md) guide.
