@@ -12,7 +12,7 @@ test:
 	python -m pytest tests
 
 test-cov:
-	python -m pytest --cov="site_checker"
+	python -m pytest --cov="site_checker" --cov-report term-missing
 
 run:
 	docker-compose up --build -d
