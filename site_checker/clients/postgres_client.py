@@ -36,6 +36,7 @@ class PostgresClient:
                 database=postgres_config.database,
                 sslmode=postgres_config.sslmode,
                 sslrootcert=postgres_config.sslrootcert,
+                connect_timeout=5,
             )
             if connection_pool:
                 self.logger.info("SQL Database connection pool created successfully")
