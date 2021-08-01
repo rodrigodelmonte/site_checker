@@ -29,8 +29,8 @@ Last request before start 🙏, On the Aiven Kafka dashboard, please go to  **Ov
 1. Checkout this repository:
 
 ```sh
-$ git clone git@github.com:aiven-recruitment/SRE-20210601-rodrigodelmonte.git
-$ cd SRE-20210601-rodrigodelmonte
+$ git clone git@github.com:aiven-recruitment/site_checker.git
+$ cd site_checker
 ```
 
 2. Setup credentials
@@ -74,6 +74,7 @@ $ make clean
 
 - `config.ini`, can check multiple websites, for more details please check the [example/example.
 - docker `.env` or `CLI parameters`, checks a single website, for more details please check the [example/example.producer.env](example/example.producer.env) file.
+
 ### Scalability considerations
 
 - The `config.ini` configuration approach will create one `thread` per website. In case you want to run `site_checker` in a single host to check multiple websites the performance will be limited by the host resources, too many websites or threads can cause too many switch context operations leading to performance impacts.
@@ -82,6 +83,7 @@ config.ini](example/example.config.ini) file.
 
 - The `CLI parameters` configuration approach also used in the `Demo`, will create a single python `process`. In case you want to monitor more than one website using this approach, you can build a container using the [Dockerfile](Dockerfile) definition as an starting point, and launch it in your container orchestrator system, e.g: `Kubernetes`, `AWS ECS` or `Mesos`.
 ![site_checker_cli_parameters diagram](docs/site_checker_cli_parameters.png)
+
 ### Security considerations
 
 The `site_checker` `consumer` will create automatically one table per topic, for example, topic name `apache` creates the table name `apache` under the schema `site_checker` into the `Postgres` instance. The `Demo` and `Getting Started` are using admin credentials to keep the steps simpler. However, this approach is not suitable for production workloads.
