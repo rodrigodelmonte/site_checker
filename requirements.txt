@@ -1,3 +1,4 @@
 click==8.0.1
 kafka-python==2.0.2
+psycopg2-binary==2.8.6
 requests==2.25.1

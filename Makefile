@@ -12,7 +12,14 @@ test:
 	python -m pytest tests
 
 test-cov:
-	python -m pytest --cov="site_checker"
+	python -m pytest --cov="site_checker" --cov-report term-missing
 
 run:
-	docker-compose up --build
+	docker-compose up --build -d
+
+logs:
+	docker-compose logs -f
+
+clean:
+	docker-compose stop
+	docker-compose rm -f

@@ -2,23 +2,13 @@ import datetime
 import json
 import logging
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 
 from clients import http_client
 from clients.kafka_client import KafkaClient
 from configs import KafkaConfig, WebsiteConfig
-from kafka.errors import KafkaError, KafkaTimeoutError
+from models import WebsiteMetrics
 from requests.models import Response
-
-
-@dataclass
-class WebsiteMetrics:
-    url: str
-    regex: str
-    has_regex: bool
-    status_code: int = 0
-    response_time: int = 0
-    ocurred_at: str = ""
 
 
 class Producer(KafkaClient):
@@ -27,51 +17,85 @@ class Producer(KafkaClient):
         self.logger = logging.getLogger(__name__)
 
     def _get_response_time(self, response: Response) -> int:
+        """Returns the approximated response time in milliseconds
+        The object `response.elapsed` measures the time in taken between
+        sending the first byte of the request and finishing parsing the headers,
+        it returns the time in microseconds. The total_seconds() method
+        returns a float number.value
+        Ref: https://docs.python-requests.org/en/master/api/#requests.Response.elapsed
+
+
+        Args:
+            response (Response): Website response object
+
+        Returns:
+            int: Respose time in Millisecond
+        """
+
         time_elapsed = response.elapsed.total_seconds()
         response_time: int = int(round(time_elapsed * 1000, 3))
 
         return response_time
 
     def _check_regex(self, regex: str, content: str) -> bool:
+        """Receives a regex + content, and returns a boolean
+
+        Args:
+            regex (str): regex to match
+            content (str): content
+
+        Returns:
+            [boolean]: has_regex
+        """
+
         has_regex: bool = bool(re.search(regex, content))
 
         return has_regex
 
-    def _get_metrics(self, website: WebsiteConfig) -> str:
+    def _get_metrics(self, website: WebsiteConfig) -> WebsiteMetrics:
+        """Get metrics from websites
 
-        self.logger.info(f"Getting metrics from url {website.url}")
+        Args:
+            website (WebsiteConfig): website to get metrics
 
-        metrics = WebsiteMetrics(url=website.url, regex=website.regex, has_regex=False)
+        Returns:
+            WebsiteMetrics: metrics
+        """
+
+        self.logger.info(f"Getting metrics from website {website.name}")
+
+        metrics = WebsiteMetrics(
+            name=website.name, url=website.url, regex=website.regex, has_regex=False
+        )
         response = http_client.get_response(website.url)
-        metrics.status_code = response.status_code
-        metrics.response_time = self._get_response_time(response)
-        metrics.ocurred_at = datetime.datetime.utcnow().isoformat()
+        if response:
+            metrics.status_code = response.status_code
+            metrics.response_time = self._get_response_time(response)
+            metrics.ocurred_at = datetime.datetime.utcnow().isoformat()
 
-        if metrics.regex and metrics.status_code == 200:
-            metrics.has_regex = self._check_regex(website.regex, response.text)
+            if metrics.regex and metrics.status_code == 200:
+                metrics.has_regex = self._check_regex(website.regex, response.text)
 
-        website_metrics = json.dumps(asdict(metrics))
+            self.logger.debug(f"Metrics collected: {metrics}")
 
-        self.logger.debug(f"Metrics collected: {website_metrics}")
-
-        return website_metrics
+        return metrics
 
     def _publish_metrics(self, website: WebsiteConfig, metrics: str) -> None:
+        """Publish website metrics to Kafka cluster
 
-        self.logger.info(f"Publishing metrics from url {website.url}")
+        Args:
+            website (WebsiteConfig): to retrieve the topic to be used.
+            metrics (str): Website metrics to be published
+        """
 
-        try:
-            self.producer().send(website.name, value=metrics)
-            self.producer().flush()
-        # Kafka handling errors example:
-        # https://www.programcreek.com/python/example/92970/kafka.errors.KafkaError
-        except KafkaTimeoutError as e:
-            self.logger.exception(f"Kafka Producer Timeout Error:\n{e}")
-        except KafkaError as e:
-            self.logger.exception(f"Kafka Error occurred:\n{e}")
+        self.logger.info(f"Publishing metrics from website {website.name}")
+        topic = website.name
+        self.producer().send(topic, value=metrics)
+        self.producer().flush()
 
     def check_website(self, website: WebsiteConfig) -> None:
 
         metrics = self._get_metrics(website)
-        if metrics:
-            self._publish_metrics(website, metrics)
+        if metrics.status_code:
+            website_metrics = json.dumps(asdict(metrics))
+            self._publish_metrics(website, website_metrics)
